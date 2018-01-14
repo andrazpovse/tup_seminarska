@@ -4,6 +4,35 @@ import pymysql
 import csv
 
 
+
+
+'''
+Kako naredimo query, kjer vzamemo samo vsako n-to (v tem primeru 5.) vrstico:
+
+
+set @row:=-1;
+SELECT Count(*)
+FROM
+    trip
+    INNER JOIN
+    (
+        SELECT id
+        FROM
+            (
+                SELECT @row:=@row+1 AS rownum, id 
+                FROM
+                    (
+                        SELECT id FROM trip ORDER BY id
+                    ) AS sorted
+            ) as ranked
+        WHERE rownum % 5 = 0
+    ) AS subset
+        ON subset.id = trip.id
+'''
+
+
+
+
 class database_queries:
     def __int__(self):
         pass
@@ -11,6 +40,7 @@ class database_queries:
         conn = None
         while conn is None:
             try:
+                # your host(localhost), username, password, database
                 conn = pymysql.connect(host='127.0.0.1', unix_socket='/tmp/mysql.sock', user='tup', passwd='tup',
                                        db='tup_seminarska')
 
@@ -20,15 +50,24 @@ class database_queries:
         return conn
 
 
-
-    def weatherQuery(self):
+    # How many rows would you like printed. Limit of rows returned in each iteration.
+    # rows = how many rows
+    # limit = how many rows in each iteration
+    def weatherQuery(self, rows, limit):
         connection = self.connect()
         cursor = connection.cursor()
 
-        cursor.execute("SELECT date FROM weather")
+        offset = 0
+        iterations = 1
+        if rows > limit:
+            iterations = int(rows/limit)
 
-        for response in cursor:
-            print(response)
+        for iterations in range(iterations):
+            print('New iteration')
+            cursor.execute("SELECT * FROM weather LIMIT %s OFFSET %s", (limit, offset))
+            for response in cursor:
+                print(response)
+            offset += limit
 
 
         cursor.close()
@@ -37,4 +76,4 @@ class database_queries:
 
 
 test = database_queries()
-test.weatherQuery()
+test.weatherQuery(1000, 50)
