@@ -1,6 +1,10 @@
 import time
 import pymysql
 
+import matplotlib.pyplot as plt
+import datetime
+import pandas as pd
+import seaborn as sns
 import csv
 
 
@@ -50,30 +54,30 @@ class database_queries:
         return conn
 
 
-    # How many rows would you like printed. Limit of rows returned in each iteration.
-    # rows = how many rows
-    # limit = how many rows in each iteration
-    def weatherQuery(self, rows, limit):
+
+    def weatherQuery(self, limit):
+        '''
+        :param limit: How many rows you would like
+        :return: Pandas dataframe with rows
+        '''
         connection = self.connect()
-        cursor = connection.cursor()
+        # cursor = connection.cursor()
 
-        offset = 0
-        iterations = 1
-        if rows > limit:
-            iterations = int(rows/limit)
+        df = pd.read_sql("SELECT date,events FROM weather LIMIT %(limit)s", con=connection, params={"limit":limit})
 
-        for iterations in range(iterations):
-            print('New iteration')
-            cursor.execute("SELECT * FROM weather LIMIT %s OFFSET %s", (limit, offset))
-            for response in cursor:
-                print(response)
-            offset += limit
-
-
-        cursor.close()
+        # cursor.close()
         connection.close()
+        return df
+
+
 
 
 
 test = database_queries()
-test.weatherQuery(1000, 50)
+data = test.weatherQuery(100)
+print(data)
+
+
+
+
+
