@@ -47,7 +47,7 @@ class database_queries:
             try:
                 # your host(localhost), username, password, database
                 conn = pymysql.connect(unix_socket='/var/run/mysqld/mysqld.sock', user='root', passwd='ep',
-                                       db='sf_bay')
+                                       db='sf_bay_bike_share')
 
             except Exception as exc:
                 print("Neuspesna povezava na podatkovno bazo. Ponovni poskus cez 1s...", exc)
@@ -63,8 +63,8 @@ class database_queries:
         '''
         connection = self.connect()
         # cursor = connection.cursor()
-
-        df = pd.read_sql("SELECT day1, diff FROM day_to_day_diff", con=connection)
+        # 94107, 94105
+        df = pd.read_sql("SELECT day1, SUM(diff) as diff FROM day_to_day_diff WHERE YEAR(day1) = 2014 GROUP BY day1, day2", con=connection)
 
         # cursor.close()
         connection.close()
@@ -77,11 +77,18 @@ data = test.weatherQuery(0)
 
 dates = [str(item) for sublist in data.as_matrix(columns=['day1']) for item in sublist]
 diffs = [item for sublist in data.as_matrix(columns=['diff']) for item in sublist]
+nsplit = 52
+weeks = np.array_split(diffs, nsplit)
+week_stds = pd.DataFrame({
+    'Teden': range(1,nsplit + 1),
+    'Standardni odklon': [np.std(week) for week in weeks]
+})
 
-
-fig, ax = plt.subplots()
-ax.plot(dates,diffs)
-ax.set_xticks(ax.get_xticks()[::50])
+# sns.swarmplot(x="Teden", y="Standardni odklon", data=week_stds, size=5)
+sns.lmplot(x="Teden", y="Standardni odklon", data=week_stds, order=3)
+# fig, ax = plt.subplots()
+# ax.plot(dates,diffs)
+# ax.set_xticks(ax.get_xticks()[::50])
 
 #plt.plot(dates, diffs, 'ko')
 #plt.xticks(np.arange(10))
