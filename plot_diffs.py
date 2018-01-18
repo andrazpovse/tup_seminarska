@@ -56,11 +56,7 @@ class database_queries:
 
 
 
-    def weatherQuery(self, limit):
-        '''
-        :param limit: How many rows you would like
-        :return: Pandas dataframe with rows
-        '''
+    def scatter_query1(self):
         connection = self.connect()
         # cursor = connection.cursor()
         # 94107, 94105
@@ -70,10 +66,22 @@ class database_queries:
         connection.close()
         return df
 
+    def scatter_query2(self):
+        connection = self.connect()
+        # cursor = connection.cursor()
+        # 94107, 94105
+        df = pd.read_sql("SELECT day1 as 'Datum', SUM(diff) as 'Razlika' FROM day_to_day_diff WHERE YEAR(day1) = 2014 AND zip_code IN ('94107', '94105') GROUP BY day1, day2", con=connection)
+
+        # cursor.close()
+        connection.close()
+        return df
+
 
 
 test = database_queries()
-data = test.weatherQuery(0)
+data = test.scatter_query1()
+
+sns.swarmplot(x="Datum", y="Razlika", data=data, size=3)
 
 dates = [str(item) for sublist in data.as_matrix(columns=['day1']) for item in sublist]
 diffs = [item for sublist in data.as_matrix(columns=['diff']) for item in sublist]
